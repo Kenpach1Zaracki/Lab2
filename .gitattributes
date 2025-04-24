@@ -1,0 +1,9 @@
+*.kt linguist-language=Kotlin
+*.cs linguist-language=C#
+*.cpp linguist-language=C++
+*.js linguist-language=JavaScript
+*.ts linguist-language=TypeScript
+*.py linguist-language=Python
+*.go linguist-language=Go
+*.rb linguist-language=Ruby
+
