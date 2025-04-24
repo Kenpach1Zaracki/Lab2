@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::io::{self, Write};
 
 // Задание 1: Проверка движения по доске
@@ -56,7 +55,7 @@ fn task2() {
         "mar.pha+science@co.rp.nstu.ru",
     ];
 
-    let mut unique = HashSet::new();
+    let mut unique = std::collections::HashSet::new();
 
     for email in emails {
         if let Some(at_pos) = email.find('@') {
@@ -76,34 +75,35 @@ fn task2() {
 
 // Задание 3: Подсчёт серий чисел (без строк и массивов)
 fn task3() {
-    println!("Введите числа по одному. Для завершения ввода введите нечисло (например, букву):");
+    let mut input = String::new();
+    println!("Введите количество чисел:");
+    io::stdin().read_line(&mut input).unwrap();
+    
+    let n: usize = input.trim().parse().unwrap_or(0);
+    if n == 0 {
+        println!("Серий: 0");
+        return;
+    }
 
-    let mut count = 0;
     let mut prev = None;
+    let mut count = 1; // Начинаем с первой серии
 
-    loop {
-        print!("> ");
-        io::stdout().flush().unwrap();
+    // Ввод чисел через пробел
+    println!("Введите {} чисел через пробел:", n);
+    let mut buf = String::new();
+    io::stdin().read_line(&mut buf).unwrap();
 
-        let mut buf = String::new();
-        if io::stdin().read_line(&mut buf).is_err() {
-            break;
-        }
+    let mut iter = buf.split_whitespace();
+    for _ in 0..n {
+        let num: i32 = iter.next().unwrap_or_default().parse().unwrap_or(0);
 
-        let num: i32 = match buf.trim().parse() {
-            Ok(n) => n,
-            Err(_) => break,
-        };
-
-        if let Some(prev_num) = prev {
-            if num < prev_num {
-                count += 1;
+        if let Some(last) = prev {
+            if num < last {
+                count += 1; // новая серия
             }
-        } else {
-            count = 1; // первая серия
         }
 
-        prev = Some(num);
+        prev = Some(num); // сохраняем предыдущее число
     }
 
     println!("Серий: {}", count);
