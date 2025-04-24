@@ -1,4 +1,5 @@
 use std::io::{self, Write};
+use std::collections::HashSet;
 
 // Задание 1: Проверка движения по доске
 fn task1() {
@@ -55,7 +56,7 @@ fn task2() {
         "mar.pha+science@co.rp.nstu.ru",
     ];
 
-    let mut unique = std::collections::HashSet::new();
+    let mut unique = HashSet::new();
 
     for email in emails {
         if let Some(at_pos) = email.find('@') {
@@ -75,27 +76,25 @@ fn task2() {
 
 // Задание 3: Подсчёт серий чисел (без строк и массивов)
 fn task3() {
-    let mut input = String::new();
     println!("Введите количество чисел:");
+    let mut input = String::new();
     io::stdin().read_line(&mut input).unwrap();
-    
+
     let n: usize = input.trim().parse().unwrap_or(0);
     if n == 0 {
         println!("Серий: 0");
         return;
     }
 
-    let mut prev = None;
+    println!("Введите числа по одному:");
+
     let mut count = 1; // Начинаем с первой серии
+    let mut prev: Option<i32> = None;
 
-    // Ввод чисел через пробел
-    println!("Введите {} чисел через пробел:", n);
-    let mut buf = String::new();
-    io::stdin().read_line(&mut buf).unwrap();
-
-    let mut iter = buf.split_whitespace();
     for _ in 0..n {
-        let num: i32 = iter.next().unwrap_or_default().parse().unwrap_or(0);
+        let mut num_input = String::new();
+        io::stdin().read_line(&mut num_input).unwrap();
+        let num: i32 = num_input.trim().parse().unwrap_or(0);
 
         if let Some(last) = prev {
             if num < last {
