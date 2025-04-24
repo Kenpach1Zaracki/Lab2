@@ -54,13 +54,26 @@ func checkBoardMovement() {
 
 // Задание 2: Подсчёт уникальных email
 func countUniqueEmails() {
-    print("Введите email-адреса через пробел:")
-    guard let input = readLine()?.split(separator: " ").map({ String($0) }) else {
-        print("Некорректный ввод.")
-        return
+    // Заранее заданные email-адреса
+    let emails = [
+        "mar.pha+science@corp.nstu.ru",
+        "marpha+scie.nce@corp.nstu.ru",
+        "marph.a+s.c.i.e.n.c.e+@corp.nstu.ru",
+        "mar.pha+science@co.rp.nstu.ru"
+    ]
+    
+    // Нормализация email
+    func normalizeEmail(_ email: String) -> String {
+        let parts = email.split(separator: "@")
+        if parts.count == 2 {
+            let local = parts[0].split(separator: "+")[0].replacingOccurrences(of: ".", with: "")
+            let domain = parts[1]
+            return "\(local)@\(domain)"
+        }
+        return email
     }
 
-    let uniqueEmails = Set(input)
+    let uniqueEmails = Set(emails.map { normalizeEmail($0) })
     print("Уникальных email-адресов: \(uniqueEmails.count)")
 }
 
@@ -72,22 +85,11 @@ func countNumberSeries() {
         return
     }
 
-    var count = 0
-    var currentSeriesCount = 1
-
+    var count = 1 // Первая серия всегда есть
     for i in 1..<input.count {
-        if input[i] == input[i - 1] + 1 {
-            currentSeriesCount += 1
-        } else {
-            if currentSeriesCount > 1 {
-                count += 1
-            }
-            currentSeriesCount = 1
+        if input[i] < input[i - 1] {
+            count += 1 // Новая серия начинается, если текущее число меньше предыдущего
         }
-    }
-
-    if currentSeriesCount > 1 {
-        count += 1
     }
 
     print("Серий: \(count)")
