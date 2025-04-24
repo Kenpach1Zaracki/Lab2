@@ -1,72 +1,53 @@
-use std::cmp::{min, max};
 use std::collections::HashSet;
 use std::io::{self, Write};
 
+// Задание 1: Проверка движения по доске
 fn task1() {
     let mut input = String::new();
+    println!("Введите размеры доски и строку команд (пример: 3 3 RRD):");
     io::stdin().read_line(&mut input).unwrap();
-    let dims: Vec<usize> = input
-        .split_whitespace()
-        .filter_map(|x| x.parse().ok())
-        .collect();
+    let parts: Vec<&str> = input.trim().split_whitespace().collect();
 
-    if dims.len() != 2 {
+    if parts.len() != 3 {
         println!("No");
         return;
     }
 
-    let n = dims[0];
-    let m = dims[1];
+    let n: i32 = parts[0].parse().unwrap_or(0);
+    let m: i32 = parts[1].parse().unwrap_or(0);
+    let s = parts[2];
 
-    if n <= 0 || m <= 0 {
+    if n <= 0 || m <= 0 || !s.chars().all(|c| "LRDU".contains(c)) {
         println!("No");
         return;
     }
 
-    input.clear();
-    io::stdin().read_line(&mut input).unwrap();
-    let s = input.trim();
+    let (mut x, mut y) = (0, 0);
+    let (mut min_x, mut max_x) = (0, 0);
+    let (mut min_y, mut max_y) = (0, 0);
 
-    if !s.chars().all(|c| "LRUD".contains(c)) {
-        println!("No");
-        return;
-    }
-
-    let mut min_x = 0;
-    let mut max_x = 0;
-    let mut min_y = 0;
-    let mut max_y = 0;
-    let mut x = 0;
-    let mut y = 0;
-
-    for move_char in s.chars() {
-        match move_char {
+    for c in s.chars() {
+        match c {
             'L' => x -= 1,
             'R' => x += 1,
-            'D' => y += 1,
             'U' => y -= 1,
+            'D' => y += 1,
             _ => {}
         }
-        min_x = min(min_x, x);
-        max_x = max(max_x, x);
-        min_y = min(min_y, y);
-        max_y = max(max_y, y);
+        min_x = min_x.min(x);
+        max_x = max_x.max(x);
+        min_y = min_y.min(y);
+        max_y = max_y.max(y);
     }
 
     if max_x - min_x < m && max_y - min_y < n {
-        println!("({}, {})", 1 - min_y, 1 - min_x);
+        println!("Yes: ({}, {})", 1 - min_y, 1 - min_x);
     } else {
         println!("No");
     }
 }
 
-fn normalize_email(email: &str) -> String {
-    let parts: Vec<&str> = email.split('@').collect();
-    let mut local = parts[0].split('+').next().unwrap().replace(".", "");
-    let domain = parts[1];
-    format!("{}@{}", local, domain)
-}
-
+// Задание 2: Подсчёт уникальных email
 fn task2() {
     let emails = vec![
         "mar.pha+science@corp.nstu.ru",
@@ -75,68 +56,80 @@ fn task2() {
         "mar.pha+science@co.rp.nstu.ru",
     ];
 
-    let unique: HashSet<String> = emails.iter().map(|e| normalize_email(e)).collect();
+    let mut unique = HashSet::new();
+
+    for email in emails {
+        if let Some(at_pos) = email.find('@') {
+            let (local, domain) = email.split_at(at_pos);
+            let local_clean: String = local
+                .chars()
+                .take_while(|&c| c != '+')
+                .filter(|&c| c != '.')
+                .collect();
+            let normalized = format!("{}{}", local_clean, domain);
+            unique.insert(normalized);
+        }
+    }
+
     println!("Уникальных адресов: {}", unique.len());
 }
 
+// Задание 3: Подсчёт серий чисел (без строк и массивов)
 fn task3() {
-    let mut line = String::new();
-    io::stdin().read_line(&mut line).unwrap();
-    let line = line.trim();
+    println!("Введите числа по одному. Для завершения ввода введите нечисло (например, букву):");
 
-    if line.is_empty() {
-        println!("Серий: 0");
-        return;
-    }
+    let mut count = 0;
+    let mut prev = None;
 
-    let numbers: Vec<i32> = line
-        .split_whitespace()
-        .filter_map(|s| s.parse::<i32>().ok())
-        .collect();
+    loop {
+        print!("> ");
+        io::stdout().flush().unwrap();
 
-    if numbers.is_empty() {
-        println!("Серий: 0");
-        return;
-    }
-
-    let mut count = 1;
-    let mut prev = numbers[0];
-
-    for &curr in &numbers[1..] {
-        if curr < prev {
-            count += 1;
+        let mut buf = String::new();
+        if io::stdin().read_line(&mut buf).is_err() {
+            break;
         }
-        prev = curr;
+
+        let num: i32 = match buf.trim().parse() {
+            Ok(n) => n,
+            Err(_) => break,
+        };
+
+        if let Some(prev_num) = prev {
+            if num < prev_num {
+                count += 1;
+            }
+        } else {
+            count = 1; // первая серия
+        }
+
+        prev = Some(num);
     }
 
     println!("Серий: {}", count);
 }
 
+// Главное меню
 fn main() {
     loop {
-        println!("Выберите задание:");
+        println!("\nВыберите задание:");
         println!("1 - Проверка движения по доске");
         println!("2 - Подсчёт уникальных email");
         println!("3 - Подсчёт серий чисел");
         println!("0 - Выход");
 
-        let mut choice = String::new();
-        io::stdin().read_line(&mut choice).unwrap();
-        let choice = choice.trim();
+        print!("Ваш выбор: ");
+        io::stdout().flush().unwrap();
 
-        match choice {
-            "1" => {
-                println!("Вы выбрали задание 1: Проверка движения по доске");
-                task1();
-            }
-            "2" => {
-                println!("Вы выбрали задание 2: Подсчёт уникальных email");
-                task2();
-            }
-            "3" => {
-                println!("Вы выбрали задание 3: Подсчёт серий чисел");
-                task3();
-            }
+        let mut choice = String::new();
+        if io::stdin().read_line(&mut choice).is_err() {
+            continue;
+        }
+
+        match choice.trim() {
+            "1" => task1(),
+            "2" => task2(),
+            "3" => task3(),
             "0" => {
                 println!("Выход...");
                 break;
