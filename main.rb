@@ -1,5 +1,8 @@
+# encoding: UTF-8
+
 def task1
-  data = gets.strip.split
+  print "Введите размеры доски и строку команд (пример: 3 3 RRD): "
+  data = STDIN.gets.force_encoding("UTF-8").strip.split
   n, m = data[0].to_i, data[1].to_i
   s = data[2]
 
@@ -30,7 +33,7 @@ def task1
   end
 
   if max_x - min_x < m && max_y - min_y < n
-    puts "(#{1 - min_y},#{1 - min_x})"
+    puts "Yes: (#{1 - min_y},#{1 - min_x})"
   else
     puts "No"
   end
@@ -43,13 +46,20 @@ def normalize_email(email)
 end
 
 def task2
-  emails = gets.strip.split
+  emails = [
+    "mar.pha+science@corp.nstu.ru",
+    "marpha+scie.nce@corp.nstu.ru",
+    "marph.a+s.c.i.e.n.c.e+@corp.nstu.ru",
+    "mar.pha+science@co.rp.nstu.ru"
+  ]
+
   unique = emails.map { |e| normalize_email(e) }.uniq
   puts "Уникальных адресов: #{unique.size}"
 end
 
 def task3
-  line = gets.strip
+  print "Введите числа через пробел: "
+  line = STDIN.gets.force_encoding("UTF-8").strip
 
   if line.empty?
     puts "Серий: 0"
@@ -57,31 +67,29 @@ def task3
   end
 
   numbers = line.split.map(&:to_i)
-  count = 0
+  count = 1
+  prev = numbers[0]
 
-  if numbers.any?
-    count = 1
-    prev = numbers[0]
-
-    numbers[1..].each do |curr|
-      if curr < prev
-        count += 1
-      end
-      prev = curr
+  numbers[1..].each do |curr|
+    if curr < prev
+      count += 1
     end
+    prev = curr
   end
 
   puts "Серий: #{count}"
 end
 
 def main
-  while true
-    puts "Выберите задание:"
+  loop do
+    puts "\nВыберите задание:"
     puts "1 - Проверка движения по доске"
     puts "2 - Подсчёт уникальных email"
     puts "3 - Подсчёт серий чисел"
     puts "0 - Выход"
-    choice = gets.strip
+    print "Ваш выбор: "
+
+    choice = STDIN.gets.force_encoding("UTF-8").strip
 
     case choice
     when '1'
