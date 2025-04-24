@@ -1,4 +1,4 @@
-Vdef task1():
+def task1():
     try:
         data = input().strip().split()
         N, M = map(int, data[:2])
