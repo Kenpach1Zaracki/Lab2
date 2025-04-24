@@ -80,25 +80,25 @@ void task2() {
 
 // Задание 3: Подсчёт серий чисел
 void task3() {
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // очистка ввода
-    cout << "Введите числа через пробел: ";
-    string line;
-    getline(cin, line);
+    int N;
+    cout << "Введите количество чисел: ";
+    cin >> N;
 
-    if (line.empty()) {
+    if (N <= 0) {
         cout << "Серий: 0" << endl;
         return;
     }
 
-    istringstream iss(line);
-    int curr, prev;
-    int count = 0;
+    cout << "Введите " << N << " чисел через пробел: ";
+    vector<int> numbers(N);
+    for (int i = 0; i < N; ++i) {
+        cin >> numbers[i];
+    }
 
-    if (iss >> prev) {
-        count = 1;
-        while (iss >> curr) {
-            if (curr < prev) count++;
-            prev = curr;
+    int count = 1; // Начинаем с первой серии
+    for (int i = 1; i < N; ++i) {
+        if (numbers[i] < numbers[i - 1]) {
+            count++;
         }
     }
 
