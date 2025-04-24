@@ -1,6 +1,6 @@
-// Функция для задачи 1: Проверка движения по доске
-async function checkBoardMovement(): Promise<void> {
-    const input = prompt("Введите размеры доски и последовательность команд (например, 3 3 DDR): ");
+// Задание 1: Проверка на выход за границы доски
+function task1(): void {
+    const input = prompt("Введите размеры доски и строку команд (пример: 3 3 RRD):");
     if (!input) {
         console.log("Неверный ввод!");
         return;
@@ -12,33 +12,30 @@ async function checkBoardMovement(): Promise<void> {
         return;
     }
 
-    const N = Number(parts[0]);
-    const M = Number(parts[1]);
+    const N = parseInt(parts[0]);
+    const M = parseInt(parts[1]);
     const S = parts[2];
 
-    // Проверка на отрицательные размеры доски
     if (isNaN(N) || isNaN(M) || N <= 0 || M <= 0) {
-        console.log("No - Некорректные размеры доски.");
+        console.log("No");
         return;
     }
 
-    // Проверка на недопустимые символы в строке команд
-    if (/[^LRUD]/.test(S)) {
-        console.log("No - Некорректная команда.");
-        return;
+    for (const c of S) {
+        if (!"LRUD".includes(c)) {
+            console.log("No");
+            return;
+        }
     }
 
     let minX = 0, maxX = 0, minY = 0, maxY = 0;
     let x = 0, y = 0;
 
-    for (let i = 0; i < S.length; i++) {
-        const move = S[i];
-        switch (move) {
-            case 'L': x--; break;
-            case 'R': x++; break;
-            case 'D': y++; break;
-            case 'U': y--; break;
-        }
+    for (const move of S) {
+        if (move === 'L') x--;
+        if (move === 'R') x++;
+        if (move === 'D') y++;
+        if (move === 'U') y--;
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
         minY = Math.min(minY, y);
@@ -46,103 +43,98 @@ async function checkBoardMovement(): Promise<void> {
     }
 
     if (maxX - minX < M && maxY - minY < N) {
-        console.log(`Yes: (${1 - minY},${1 - minX})`);
+        console.log(`Yes: (${1 - minY}, ${1 - minX})`);
     } else {
         console.log("No");
     }
 }
 
-// Функция для задачи 2: Подсчет уникальных email
-async function countUniqueEmails(): Promise<void> {
-    const input = prompt("Введите список email (например, mar.pha+science@corp.nstu.ru): ");
-    if (!input) {
-        console.log("Неверный ввод!");
-        return;
-    }
-
-    const emails = input.split(" ");
+// Задание 2: Подсчёт уникальных email
+function task2(): void {
+    const emails = [
+        "mar.pha+science@corp.nstu.ru",
+        "marpha+scie.nce@corp.nstu.ru",
+        "marph.a+s.c.i.e.n.c.e+@corp.nstu.ru",
+        "mar.pha+science@co.rp.nstu.ru"
+    ];
 
     function normalizeEmail(email: string): string {
-        const parts = email.split("@");
-        if (parts.length !== 2) {
-            console.log("Некорректный email:", email);
-            return email;
-        }
-        const local = parts[0].split("+")[0].replace(/\./g, "");
-        return `${local}@${parts[1]}`;
+        const atPos = email.indexOf("@");
+        const local = email.substring(0, atPos).split("+")[0].replace(/\./g, "");
+        const domain = email.substring(atPos);
+        return local + domain;
     }
 
-    const uniqueEmails: string[] = [];
-
-    for (let i = 0; i < emails.length; i++) {
-        const normalized = normalizeEmail(emails[i]);
-        if (uniqueEmails.indexOf(normalized) === -1) {
-            uniqueEmails.push(normalized);
-        }
+    const uniqueEmails = new Set<string>();
+    for (const email of emails) {
+        uniqueEmails.add(normalizeEmail(email));
     }
 
-    console.log("Уникальных адресов:", uniqueEmails.length);
+    console.log(`Уникальных адресов: ${uniqueEmails.size}`);
 }
 
-// Функция для задачи 3: Подсчет серий чисел
-async function countSeries(): Promise<void> {
-    const input = prompt("Введите последовательность чисел (например, 5 1 2 3 2 5): ");
-    if (!input) {
-        console.log("Неверный ввод!");
+// Задание 3: Подсчёт серий чисел
+function task3(): void {
+    const input = prompt("Введите числа через пробел:") || "";
+    if (!input.trim()) {
+        console.log("Серий: 0");
         return;
     }
 
-    const numbers = input.split(" ").map(Number);
+    const numbers = input.split(" ").map((num) => parseInt(num.trim()));
     if (numbers.some(isNaN)) {
-        console.log("Некорректный ввод чисел!");
+        console.log("Неверный ввод!");
         return;
     }
 
     let count = 0;
+    let prev: number | null = null;
 
-    if (numbers.length > 0) {
-        count = 1; // Первая серия
-        let prev = numbers[0];
-
-        for (let i = 1; i < numbers.length; i++) {
-            const curr = numbers[i];
-            if (curr < prev) {
-                count++; // Увеличиваем счетчик серий
-            }
-            prev = curr; // Обновляем предыдущее число
+    for (const curr of numbers) {
+        if (prev !== null && curr < prev) {
+            count++;
         }
+        prev = curr;
     }
 
     console.log(`Серий: ${count}`);
 }
 
 // Главное меню
-async function main(): Promise<void> {
+function main(): void {
     while (true) {
-        const choice = prompt(`Выберите задание:
-1 - Проверка движения по доске
-2 - Подсчёт уникальных email
-3 - Подсчёт серий чисел
-0 - Выход\n`);
+        const choice = prompt(
+            "\nВыберите задание:\n" +
+            "1 - Проверка движения по доске\n" +
+            "2 - Подсчёт уникальных email\n" +
+            "3 - Подсчёт серий чисел\n" +
+            "0 - Выход\n" +
+            "Ваш выбор:"
+        );
 
-        switch (choice) {
-            case '1':
-                await checkBoardMovement();
+        if (!choice) {
+            console.log("Выход...");
+            break;
+        }
+
+        switch (parseInt(choice)) {
+            case 1:
+                task1();
                 break;
-            case '2':
-                await countUniqueEmails();
+            case 2:
+                task2();
                 break;
-            case '3':
-                await countSeries();
+            case 3:
+                task3();
                 break;
-            case '0':
-                console.log("Выход");
+            case 0:
+                console.log("Выход...");
                 return;
             default:
-                console.log("Неверный ввод");
+                console.log("Неверный выбор!");
         }
     }
 }
 
+// Запуск программы
 main();
-
