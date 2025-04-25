@@ -50,29 +50,56 @@ void task1() {
 }
 
 // Задание 2: Подсчёт уникальных email
+bool isValidUsername(const string& username) {
+    if (username.length() < 6 || username.length() > 30) return false;
+    if (username.front() == '.' || username.back() == '.') return false;
+
+    for (size_t i = 0; i < username.size(); ++i) {
+        char c = username[i];
+
+        if (!(islower(c) || isdigit(c) || c == '.')) {
+            return false;
+        }
+
+        if (c == '.' && i + 1 < username.size() && username[i + 1] == '.') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+string normalizeUsername(const string& raw) {
+    string result;
+    for (char c : raw) {
+        if (c == '*') break;
+        if (c == '.') continue;
+        result += c;
+    }
+    return result;
+}
+
 void task2() {
     vector<string> emails = {
-        "mar.pha+science@corp.nstu.ru",
-        "marpha+scie.nce@corp.nstu.ru",
-        "marph.a+s.c.i.e.n.c.e+@corp.nstu.ru",
-        "mar.pha+science@co.rp.nstu.ru"
-    };
-
-    auto normalizeEmail = [](const string& email) {
-        size_t at_pos = email.find('@');
-        string local = email.substr(0, at_pos);
-        string domain = email.substr(at_pos);
-        string normalized;
-        for (char ch : local) {
-            if (ch == '+') break;
-            if (ch != '.') normalized += ch;
-        }
-        return normalized + domain;
+        "mar.pha*science@corp.nstu.ru",
+        "marpha*sci.ence@corp.nstu.ru",
+        "ma..rph.a*science@corp.nstu.ru",
+        "mar.pha*science@co.rp.nstu.ru"
     };
 
     set<string> uniqueEmails;
+
     for (const auto& email : emails) {
-        uniqueEmails.insert(normalizeEmail(email));
+        size_t at = email.find('@');
+        if (at == string::npos) continue;
+
+        string user = email.substr(0, at);
+        string domain = email.substr(at);
+
+        if (!isValidUsername(user)) continue;
+
+        string normalized = normalizeUsername(user) + domain;
+        uniqueEmails.insert(normalized);
     }
 
     cout << "Уникальных адресов: " << uniqueEmails.size() << endl;
@@ -80,26 +107,29 @@ void task2() {
 
 // Задание 3: Подсчёт серий чисел
 void task3() {
-    int N;
+    int n;
     cout << "Введите количество чисел: ";
-    cin >> N;
+    cin >> n; // Вводим количество чисел
 
-    if (N <= 0) {
-        cout << "Серий: 0" << endl;
+    if (n <= 0) {
+        cout << "Серий: 0" << endl; // Если количество чисел меньше или равно нулю
         return;
     }
 
-    cout << "Введите " << N << " чисел через пробел: ";
-    vector<int> numbers(N);
-    for (int i = 0; i < N; ++i) {
-        cin >> numbers[i];
-    }
-
+    int prev, curr;
     int count = 1; // Начинаем с первой серии
-    for (int i = 1; i < N; ++i) {
-        if (numbers[i] < numbers[i - 1]) {
-            count++;
+
+    cout << "Введите " << n << " чисел: ";
+    
+    // Вводим первое число
+    cin >> prev;
+
+    for (int i = 1; i < n; ++i) {
+        cin >> curr;  // Вводим следующее число
+        if (curr < prev) {
+            count++;  // Если текущее число меньше предыдущего, увеличиваем счётчик серий
         }
+        prev = curr;  // Обновляем предыдущее число
     }
 
     cout << "Серий: " << count << endl;
