@@ -1,5 +1,4 @@
 use std::io::{self, Write};
-use std::collections::HashSet;
 
 // Задание 1: Проверка движения по доске
 fn task1() {
@@ -56,7 +55,7 @@ fn task2() {
         "mar.pha+science@co.rp.nstu.ru",
     ];
 
-    let mut unique = HashSet::new();
+    let mut unique = std::collections::HashSet::new();
 
     for email in emails {
         if let Some(at_pos) = email.find('@') {
@@ -77,19 +76,21 @@ fn task2() {
 // Задание 3: Подсчёт серий чисел (без строк и массивов)
 fn task3() {
     println!("Введите количество чисел:");
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
 
-    let n: usize = input.trim().parse().unwrap_or(0);
+    // Вводим количество чисел
+    let mut n_input = String::new();
+    io::stdin().read_line(&mut n_input).unwrap();
+
+    let n: usize = n_input.trim().parse().unwrap_or(0);
     if n == 0 {
         println!("Серий: 0");
         return;
     }
 
-    println!("Введите числа по одному:");
+    println!("Введите числа:");
 
     let mut count = 1; // Начинаем с первой серии
-    let mut prev: Option<i32> = None;
+    let mut prev = None; // Храним предыдущее число
 
     for _ in 0..n {
         let mut num_input = String::new();
