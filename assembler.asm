@@ -1,9 +1,13 @@
 section .bss
-    buf resb 256
-    n resq 1
-    m resq 1
-    x resq 1
-    y resq 1
+    buf resb 256      ; Буфер для ввода
+    n resq 1          ; Количество строк
+    m resq 1          ; Количество столбцов
+    x resq 1          ; Текущая X координата
+    y resq 1          ; Текущая Y координата
+    minx resq 1
+    maxx resq 1
+    miny resq 1
+    maxy resq 1
 
 section .data
     msg_yes db "Yes: (", 0
@@ -14,40 +18,110 @@ section .data
 section .text
     global _start
 
+; ========== ПРОЦЕДУРЫ ==========
+skip_spaces:
+.skip:
+    mov al, [rsi]
+    cmp al, ' '
+    je .inc
+    cmp al, 9
+    je .inc
+    ret
+.inc:
+    inc rsi
+    jmp .skip
+
+parse_int:
+    xor rax, rax
+    xor rbx, rbx
+    mov rcx, 10
+.next_digit:
+    mov bl, [rsi]
+    cmp bl, '0'
+    jb .done
+    cmp bl, '9'
+    ja .done
+    sub bl, '0'
+    imul rax, rcx
+    add rax, rbx
+    inc rsi
+    jmp .next_digit
+.done:
+    ret
+
+print_string:
+    mov rdx, 0
+.strlen:
+    cmp byte [rsi + rdx], 0
+    je .print
+    inc rdx
+    jmp .strlen
+.print:
+    mov rax, 1
+    mov rdi, 1
+    syscall
+    ret
+
+print_number:
+    mov rcx, 10
+    sub rsp, 32
+    mov rdi, rsp
+    add rdi, 32
+    mov rbx, 0
+.convert:
+    xor rdx, rdx
+    div rcx
+    dec rdi
+    add dl, '0'
+    mov [rdi], dl
+    inc rbx
+    test rax, rax
+    jnz .convert
+    mov rax, 1
+    mov rsi, rdi
+    mov rdi, 1
+    mov rdx, rbx
+    syscall
+    add rsp, 32
+    ret
+
+; ========== ТОЧКА ВХОДА ==========
 _start:
-    ; читаем строку
+    ; Читаем ввод
     mov rax, 0
     mov rdi, 0
     lea rsi, [buf]
     mov rdx, 255
     syscall
 
-    ; парсим n
+    ; Парсим N и M
     lea rsi, [buf]
     call skip_spaces
     call parse_int
     mov [n], rax
 
-    ; парсим m
     call skip_spaces
     call parse_int
     mov [m], rax
 
-    ; устанавливаем начальную позицию
-    mov rax, 1
+    ; Инициализация
+    xor rax, rax
     mov [x], rax
     mov [y], rax
+    mov [minx], rax
+    mov [maxx], rax
+    mov [miny], rax
+    mov [maxy], rax
 
-    ; пропускаем пробелы до команд
     call skip_spaces
 
-.check:
+; ========== ОБРАБОТКА КОМАНД ==========
+.loop:
     mov al, [rsi]
     cmp al, 0
-    je .valid
-
-    cmp al, 10       ; \n — конец строки
-    je .valid
+    je .check_bounds
+    cmp al, 10
+    je .check_bounds
 
     cmp al, 'L'
     je .left
@@ -57,54 +131,76 @@ _start:
     je .up
     cmp al, 'D'
     je .down
-
     jmp .invalid
 
 .left:
-    mov rax, [y]
-    dec rax
-    cmp rax, 1
-    jl .invalid
-    mov [y], rax
-    jmp .next
-
+    dec qword [y]
+    jmp .update
 .right:
-    mov rax, [y]
-    inc rax
-    cmp rax, [m]
-    jg .invalid
-    mov [y], rax
-    jmp .next
-
+    inc qword [y]
+    jmp .update
 .up:
-    mov rax, [x]
-    dec rax
-    cmp rax, 1
-    jl .invalid
-    mov [x], rax
-    jmp .next
-
+    dec qword [x]
+    jmp .update
 .down:
+    inc qword [x]
+    jmp .update
+
+.update:
+    ; Обновление мин/макс
     mov rax, [x]
-    inc rax
-    cmp rax, [n]
-    jg .invalid
-    mov [x], rax
-    jmp .next
+    mov rbx, [minx]
+    cmp rax, rbx
+    jge .no_minx
+    mov [minx], rax
+.no_minx:
+    cmp rax, [maxx]
+    jle .no_maxx
+    mov [maxx], rax
+.no_maxx:
 
-.next:
+    mov rax, [y]
+    cmp rax, [miny]
+    jge .no_miny
+    mov [miny], rax
+.no_miny:
+    cmp rax, [maxy]
+    jle .no_maxy
+    mov [maxy], rax
+.no_maxy:
+
     inc rsi
-    jmp .check
+    jmp .loop
 
-.valid:
+; ========== ПРОВЕРКА ГРАНИЦ ==========
+.check_bounds:
+    mov rax, [maxx]
+    sub rax, [minx]
+    inc rax         ; Длина по X
+    cmp rax, [n]
+    ja .invalid
+
+    mov rax, [maxy]
+    sub rax, [miny]
+    inc rax         ; Длина по Y
+    cmp rax, [m]
+    ja .invalid
+
+    ; Вывод Yes: (1 - minx, 1 - miny)
     lea rsi, [msg_yes]
     call print_string
-    mov rax, [x]
+
+    mov rax, 1
+    sub rax, [minx]
     call print_number
+
     lea rsi, [comma]
     call print_string
-    mov rax, [y]
+
+    mov rax, 1
+    sub rax, [miny]
     call print_number
+
     lea rsi, [close_br]
     call print_string
     jmp .exit
@@ -117,77 +213,3 @@ _start:
     mov rax, 60
     xor rdi, rdi
     syscall
-
-; === parse_int ===
-; rsi → строка
-; rax ← число
-parse_int:
-    xor rax, rax
-    xor rbx, rbx
-    mov rcx, 10
-.parse_loop:
-    mov bl, [rsi]
-    cmp bl, '0'
-    jb .done
-    cmp bl, '9'
-    ja .done
-    sub bl, '0'
-    imul rax, rcx
-    add rax, rbx
-    inc rsi
-    jmp .parse_loop
-.done:
-    ret
-
-; === skip_spaces ===
-skip_spaces:
-.skip_loop:
-    mov al, [rsi]
-    cmp al, ' '
-    je .skip
-    cmp al, 9          ; tab
-    je .skip
-    ret
-.skip:
-    inc rsi
-    jmp .skip_loop
-
-; === print_string ===
-; rsi → null-terminated
-print_string:
-    mov rdx, 0
-.strlen:
-    cmp byte [rsi+rdx], 0
-    je .print
-    inc rdx
-    jmp .strlen
-.print:
-    mov rax, 1
-    mov rdi, 1
-    syscall
-    ret
-
-; === print_number ===
-; rax = число
-print_number:
-    mov rcx, 10
-    sub rsp, 32
-    mov rdi, rsp
-    add rdi, 32
-    mov rbx, 0
-.rev_loop:
-    xor rdx, rdx
-    div rcx
-    dec rdi
-    add dl, '0'
-    mov [rdi], dl
-    inc rbx
-    test rax, rax
-    jnz .rev_loop
-    mov rax, 1
-    mov rsi, rdi
-    mov rdi, 1
-    mov rdx, rbx
-    syscall
-    add rsp, 32
-    ret
