@@ -3,3 +3,8 @@ CSharp/
 .vscode/
 main
 CPlusPlus
+
+# Compiled OOP examples
+oop_example
+oop_example_detailed
+oop_exercises
